@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隐藏天赋深度挖掘</title>
+    <style>
+        body { font-family: 'PingFang SC', sans-serif; background-color: #0a0a0a; color: #d1d1d1; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        header { margin-top: 40px; text-align: center; margin-bottom: 20px; width: 90%; }
+        h1 { color: #D4AF37; font-size: 24px; letter-spacing: 2px; }
+        .progress { font-size: 14px; color: #666; margin-bottom: 15px; }
+        .dimension-tag { display: inline-block; background-color: rgba(212, 175, 55, 0.1); border: 1px solid #D4AF37; color: #D4AF37; padding: 5px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; margin-bottom: 10px; transition: all 0.3s ease;}
+        #quiz-area { background-color: #111; border: 1px solid #222; border-radius: 12px; padding: 30px 20px; width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .question { font-size: 18px; color: #fff; line-height: 1.6; margin-bottom: 30px; }
+        .options-container { display: flex; flex-direction: column; gap: 15px; }
+        .option-btn { background-color: #1a1a1a; border: 1px solid #333; color: #aaa; padding: 18px 20px; border-radius: 8px; font-size: 16px; text-align: left; cursor: pointer; }
+        .option-btn:hover { border-color: #D4AF37; color: #fff; }
+        #result-box { display: none; background-color: #111; border: 1px solid #D4AF37; border-radius: 12px; padding: 30px 25px; width: 90%; max-width: 500px; margin-top: 20px; }
+        .result-title { color: #D4AF37; font-size: 22px; font-weight: bold; text-align: center; margin-bottom: 20px; display: block;}
+        .highlight { line-height: 1.8; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>隐藏天赋深度挖掘</h1>
+        <div class="progress" id="progress-text">载入中...</div>
+        <div class="dimension-tag" id="dim-text">初始化维度...</div>
+    </header>
+    <div id="quiz-area">
+        <div class="question" id="question-text"></div>
+        <div class="options-container">
+            <button class="option-btn" id="btn-1" onclick="answer(1)"></button>
+            <button class="option-btn" id="btn-2" onclick="answer(2)"></button>
+            <button class="option-btn" id="btn-3" onclick="answer(3)"></button>
+            <button class="option-btn" id="btn-4" onclick="answer(4)"></button>
+        </div>
+    </div>
+    <div id="result-box"></div>
+
+    <script src="game.js"></script>
+    <script>
+        const questions = [
+            // 维度一：洞察嗅觉 (1-20)
+            { q: "陌生社交场合，你第一件事是？", options: ["找角落坐下", "找亲切的人破冰", "观察核心焦点", "扫描眼神与站位，判断权力结构"] },
+            { q: "你如何看待‘孤独’？", options: ["性格缺陷", "无奈的现状", "思考的必需品", "降维打击的修炼场"] },
+            { q: "听到赞美时的反应？", options: ["开心一整天", "礼貌道谢", "分析是否客观", "警惕并反推对方动机"] },
+            { q: "悬疑片何时猜到结局？", options: ["最后才恍然大悟", "演到一半有答案", "通过逻辑推导", "前十分钟通过反常细节锁定"] },
+            { q: "面对烂摊子的感觉？", options: ["极其崩溃", "焦虑但硬着头皮理", "尝试画思维导图", "兴奋，寻找核心线头"] },
+            { q: "看待别人的悲惨遭遇？", options: ["深深共情", "努力安慰", "提出建议", "冷冰冰地解构对方在其中的角色"] },
+            { q: "面对‘不可能完成’的任务？", options: ["直接放弃", "虽然难但想试", "总结失败原因", "直觉告诉我有暴利空间"] },
+            { q: "五分钟内看穿别人阶层？", options: ["从来没有", "偶尔猜对", "通过谈吐分析", "精准嗅到对方对资源的焦虑"] },
+            { q: "如何分辨撒谎？", options: ["凭直觉", "看眼神躲闪", "逻辑盘问细节", "观察对方刻意的松弛感"] },
+            { q: "什么是核心机密？", options: ["财务报表", "大佬的战略", "竞对计划", "大佬没察觉到的某种恐惧"] },
+            { q: "获取行业前沿信息？", options: ["看官方新闻", "参加论坛", "购买研报", "混入私密圈子听潜规则"] },
+            { q: "你的目光像什么？", options: ["阳光", "激光尺", "X光", "恶魔之眼"] },
+            { q: "众人都冲入的机会？", options: ["赶紧跟上", "观望一下", "计算胜率", "寻找卖铲子的路径"] },
+            { q: "对‘常识’的态度？", options: ["必须遵守", "正确的经验", "怀疑并重新验证", "平庸者的枷锁"] },
+            { q: "看到新商业模式爆火？", options: ["当消费者体验", "跟朋友讨论", "拆解盈利结构", "透视底层人性弱点"] },
+            { q: "别人努力却失败？", options: ["同情命运", "运气太差", "方向错了", "意识到低维度勤奋的懒惰"] },
+            { q: "生存最需看透什么？", options: ["社交礼仪", "行业趋势", "法律边界", "利益分配的暗网"] },
+            { q: "预感是否准确？", options: ["不相信预感", "偶尔巧合", "通常很准", "大脑处理微小细节后的必然"] },
+            { q: "面对伪君子？", options: ["被蒙骗", "感觉不舒服", "小心提防", "配合演戏，关键时刻抽走梯子"] },
+            { q: "天赋中最危险的部分？", options: ["情绪化", "追求完美", "逻辑太严密", "对世俗的冷漠与蔑视"] },
+
+            // 维度二：规则破坏 (21-40)
+            { q: "报销流程繁琐，你会？", options: ["老实跑完", "邮件抗议", "找人代跑", "直接找大领导签批"] },
+            { q: "看待“吃亏是福”？", options: ["古人智慧", "看情况", "安慰弱者的借口", "防止底层反抗的洗脑包"] },
+            { q: "游戏金币漏洞？", options: ["举报Bug", "不敢用", "偷偷用几次", "连夜写脚本榨干价值"] },
+            { q: "靠走捷径发财的人？", options: ["极度鄙视", "心里不平衡", "好奇怎么逃避惩罚", "认知跨越了规则边界"] },
+            { q: "遇到“钉子户”阻碍？", options: ["无奈妥协", "法律途径", "利益交换", "灰色手段或心理压制"] },
+            { q: "网红店排长队？", options: ["老实排队", "去吃别的", "找黄牛买位", "装熟人插队或假装外卖员"] },
+            { q: "对“权威”的态度？", options: ["敬畏服从", "尊重知识", "保持怀疑", "挑战破坏的欲望"] },
+            { q: "绝佳机会但需粉饰PPT？", options: ["坚决拒绝", "纠结并放弃", "巧妙粉饰不留硬伤", "拿到钱是真的就行"] },
+            { q: "深夜红灯无车？", options: ["老实等灯", "看没车就过", "跟人一起闯", "直接走，规则防傻不防我"] },
+            { q: "新官上任第一把火？", options: ["先苟着", "温水煮青蛙", "提拔边缘人物", "空降亲信直接立威"] },
+            { q: "面对极度内卷？", options: ["跟着卷", "到点就走", "表面卷私下摸鱼", "向决策者证明内卷无用"] },
+            { q: "“规矩是死的”精髓？", options: ["做事变通", "寻求帮助", "找替代方案", "所有规矩都有后门"] },
+            { q: "不道德手段秒杀对手？", options: ["坚守底线", "怕坏名声", "利益大就干", "活下来的人书写道德"] },
+            { q: "最讨厌哪句话？", options: ["你做不到", "你这人怎么这样", "你不懂逻辑", "大家都是这样"] },
+            { q: "参加不公平比赛？", options: ["抗议退赛", "尽力去比", "寻找漏洞", "用更作弊的手段摧毁比赛"] },
+            { q: "看待“越级汇报”？", options: ["职场大忌", "除非领导犯错", "偶尔为之", "只要老板看重，不顾直属"] },
+            { q: "公司要求低效流程？", options: ["照章办事", "提建议", "偷偷用高效工具", "带头违反用业绩说话"] },
+            { q: "如何理解“野心”？", options: ["过好日子", "出人头地", "渴望权力财富", "重建个人帝国的欲望"] },
+            { q: "“前人栽树”你会？", options: ["感激乘凉", "理所当然", "分析怎么栽的", "拔了卖给木匠"] },
+            { q: "安稳的一眼看到老？", options: ["觉得幸福", "会觉得无聊", "非常压抑", "主动制造危机"] },
+
+            // 维度三：人心操控 (41-60)
+            { q: "说服强大的人？", options: ["展现诚意", "讲道理", "利益交换", "寻找对方不安全感"] },
+            { q: "沟通中情绪的作用？", options: ["软弱表现", "真情流露", "润滑剂", "操控对方的武器"] },
+            { q: "面对固执的人？", options: ["反复劝说", "尊重命运", "找权威说服", "制造无法处理的小意外"] },
+            { q: "最高级的‘骗术’？", options: ["天衣无缝的谎", "九真一假", "让对方觉得是自己想的", "构建获利丰厚的幻境"] },
+            { q: "发现别人在利用你？", options: ["大发雷霆", "默默疏远", "找机会报复", "反向植入后门"] },
+            { q: "评价自己的‘亲和力’？", options: ["真的很随和", "比较慢热", "社交工具", "狩猎信任的伪装色"] },
+            { q: "会议中扮演什么？", options: ["记录者", "建议者", "仲裁者", "观察微表情引导风向者"] },
+            { q: "牺牲下属保大局？", options: ["极其痛苦", "寻找两全法", "按规补偿", "演一场感人的戏"] },
+            { q: "获取陌生人信任？", options: ["展示专业", "真诚谦卑", "好友背书", "镜像模仿对方"] },
+            { q: "什么是‘善良’？", options: ["为人底线", "一种选择", "弱者的盔甲", "收买人心的耗材"] },
+            { q: "别人产生敌意？", options: ["反思自己", "受伤反击", "无视精力", "分析敌意来源"] },
+            { q: "故意输掉小比赛？", options: ["从不输", "没想过", "偶尔谦让", "为大胜拿过程做交换"] },
+            { q: "与自卑者相处？", options: ["保护自尊", "鼓励自信", "保持距离", "给认同感建立依赖"] },
+            { q: "理解‘人情债’？", options: ["沉重负担", "关系纽带", "做人操守", "昂贵的杠杆"] },
+            { q: "有效的惩罚？", options: ["扣钱处分", "当众羞辱", "绝交", "冷暴力边缘化"] },
+            { q: "利用朋友弱点？", options: ["绝不会", "纠结", "没大害可以", "成大事不拘小节"] },
+            { q: "眼中的‘英雄’？", options: ["拯救世界者", "默默付出者", "伟大领袖", "顶级催眠师"] },
+            { q: "看待‘忠诚’？", options: ["无价宝", "有条件信任", "过时契约", "背叛筹码不够"] },
+            { q: "众人在狂欢？", options: ["加入其中", "想早点回家", "观察谁失控", "寻找权力空白"] },
+            { q: "最擅长表演？", options: ["本色出演", "假装开心", "专业感", "展示互斥的人格碎片"] },
+
+            // 维度四：绝对理性 (61-80)
+            { q: "面对沉重打击？", options: ["崩溃大哭", "寻找罪魁", "寻求安慰", "瞬间开启损益评估"] },
+            { q: "看待‘后悔’？", options: ["人生常态", "成长动力", "毫无意义内耗", "计算失误的补偿"] },
+            { q: "重大决策相信？", options: ["直觉", "行业经验", "专家意见", "数据与逻辑模型"] },
+            { q: "51%胜算但会倾家荡产？", options: ["绝不冒险", "寻找保障", "小赌一下", "取决于机会成本"] },
+            { q: "看待‘爱情’？", options: ["神圣意义", "冲动难持久", "陪伴保障", "风险博弈价值交换"] },
+            { q: "亲人离世极度冷静？", options: ["情感淡漠", "没反应过来", "不想示弱", "深知规律无法逆转"] },
+            { q: "忍受奇耻大辱？", options: ["宁死不屈", "看程度", "可以忍受", "只是情绪输出无损耗"] },
+            { q: "世界运行逻辑？", options: ["爱与希望", "因果循环", "丛林法则", "概率公式与能量流"] },
+            { q: "信念被证伪？", options: ["拒绝接受", "调整心态", "庆幸纠正", "原地迭代新模型"] },
+            { q: "定义‘朋友’？", options: ["交心知己", "拉一把的人", "志同道合", "阶段性利益单元"] },
+            { q: "看待‘运气’？", options: ["重要因素", "上帝恩赐", "偶然概率", "强者自谦弱者遮羞"] },
+            { q: "努力注定失败？", options: ["相信奇迹", "走完最后一程", "修正方向", "立刻止损"] },
+            { q: "最喜欢的话？", options: ["天道酬勤", "难得糊涂", "向死而生", "能计算的皆非命运"] },
+            { q: "看待‘金钱’？", options: ["身外物", "自由工具", "尊严象征", "通用协议度量价值"] },
+            { q: "混乱时刻？", options: ["寻找出路", "躲避安全", "感到恐惧", "进入超频观察视角"] },
+            { q: "面对谩骂？", options: ["极力解释", "愤怒骂回去", "委屈落泪", "对方认知低下无感"] },
+            { q: "觉得自己像？", options: ["火焰", "江河", "山脉", "超级计算机"] },
+            { q: "未来不确定性？", options: ["焦虑恐惧", "随遇而安", "期待好奇", "构建优势的素材"] },
+            { q: "‘真理’？", options: ["少数人手中", "一生追求", "动态认知", "冰冷残忍不符情感"] },
+            { q: "抹除情感换智慧？", options: ["绝不", "有点犹豫", "尝试一小部分", "毫不犹豫清理冗余代码"] }
+        ];
+
+        let currentQuestion = 0; let myAnswers = "";
+        const urlParams = new URLSearchParams(window.location.search);
+        const authCode = urlParams.get('code') || "none";
+
+        function loadQuestion() {
+            if (currentQuestion >= questions.length) return;
+            let dimText = "";
+            if (currentQuestion < 20) dimText = "▶ 第一维度：【洞察嗅觉】";
+            else if (currentQuestion < 40) dimText = "▶ 第二维度：【规则破坏】";
+            else if (currentQuestion < 60) dimText = "▶ 第三维度：【人心操控】";
+            else dimText = "▶ 第四维度：【绝对理性】";
+            
+            document.getElementById('dim-text').innerText = dimText;
+            document.getElementById('progress-text').innerText = `天赋潜行进度：${currentQuestion + 1} / 80`;
+            document.getElementById('question-text').innerText = questions[currentQuestion].q;
+            for(let i=1; i<=4; i++) document.getElementById('btn-'+i).innerText = questions[currentQuestion].options[i-1];
+        }
+
+        function answer(choice) {
+            myAnswers += choice; currentQuestion++;
+            if (currentQuestion < questions.length) { loadQuestion(); } 
+            else {
+                document.getElementById('quiz-area').style.display = 'none';
+                document.getElementById('dim-text').style.display = 'none';
+                document.getElementById('progress-text').innerText = '正在通过 Wasm 引擎解析隐藏天赋...';
+                const result = Module.ccall('get_personality_result', 'string', ['string', 'string'], [myAnswers, authCode]);
+                let resultDiv = document.getElementById('result-box');
+                resultDiv.style.display = 'block';
+                let splitIndex = result.indexOf('】') + 1;
+                resultDiv.innerHTML = `<span class='result-title'>${result.substring(0, splitIndex)}</span><span class='highlight'>${result.substring(splitIndex).replace(/\n/g, "<br>")}</span>`;
+            }
+        }
+        Module.onRuntimeInitialized = function() { loadQuestion(); };
+    </script>
+</body>
+</html>
