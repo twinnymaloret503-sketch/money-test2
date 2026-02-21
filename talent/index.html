@@ -91,9 +91,9 @@
             { q: "当你发现现有的工具和流程极其低效，但公司强制要求使用时？", options: ["强忍不适，照章办事", "向上级提出优化建议，等批复", "自己偷偷用高效工具，提交时伪装成规定格式", "公然带头违反流程，用几十倍的业绩甩在老板脸上逼他改规矩"] },
             { q: "你如何理解“野心”这个词？", options: ["想要过上好日子的普通愿望", "想要在行业内出人头地的动力", "对权力、财富极其强烈的渴望", "一种不惜燃烧一切现有秩序，也要重建属于我个人帝国的破坏欲"] },
             { q: "对于“前人栽树，后人乘凉”的传统美德，你的操作方式是？", options: ["心怀感激地乘凉，并努力去栽下一棵树", "理所当然地乘凉，享受现成的东西", "不仅乘凉，还要分析这棵树是怎么栽的", "趁没人注意，把前人栽的树连根拔起，卖给极其需要木材的木匠"] },
-            { q: "如果把你放在一个极其安稳、每天重复、一眼看到老的环境里，你会？", options: ["觉得很幸福，这就是我想要的", "久了会觉得无聊，想找点爱好", "非常压抑，经常想辞职", "发疯。我会为了寻找刺激而主动去制造危机，甚至不惜亲手毁掉这份安稳"] }
-// --- 维度三：人心操控 (41-60题) ---
-            { q: "朋友向你哭诉极其愚蠢的失恋经历，你心里觉得他活该，但你会？", options: ["忍不住指出他的问题，把他骂醒", "敷衍安慰几句，找借口离开", "默默听他哭，不发表意见", "展现出极致的共情，跟他一起痛骂前任，让他对你产生极度的情感依赖"] },
+          { q: "如果你把你在一个极其安稳、每天重复、一眼看到老的环境里，你会？", options: ["觉得很幸福，这就是我想要的", "久了会觉得无聊，想找点爱好", "非常压抑，经常想辞职", "发疯。我会为了寻找刺激而主动去制造危机甚至毁掉这份安稳"] },
+            // --- 维度三：人心操控 (41-60题) ---
+            { q: "如果你想让一个固执的人改变主意，你最常用的手段是？", options: ["拿出铁证如山的数据去说服他", "和他大吵一架，看谁气势强", "找他信任的权威人士去施压", "先顺着他的逻辑，极其隐蔽地植入一个恐惧，让他自己推翻自己"] },
             { q: "你需要一个非常有能力的同事免费帮你干私活，你会怎么开口？", options: ["不好意思开口，大概率自己熬夜干", "直接请他吃顿大餐，当作交换", "谈未来的利益分配，承诺以后回报他", "给他戴高帽，赋予这件事极其崇高的意义，让他觉得帮你是在实现他的个人价值"] },
             { q: "你如何看待‘示弱’这种行为？", options: ["觉得丢人，我从来不示弱", "只有在真正无助的时候才会做", "偶尔用来博取别人的同情", "这是一种极其高级的控制手段。精准的示弱能瞬间卸下对方的防备，让他心甘情愿为你冲锋陷阵"] },
             { q: "在团队中遇到极度不配合你的‘刺头’，你的常规操作是？", options: ["直接跟他大吵一架，甚至大打出手", "向领导打小报告，借刀杀人", "用过硬的专业实力让他心服口服", "表面捧杀他，暗中挑拨他与团队其他人的关系，让他彻底被孤立后自行崩溃"] },
@@ -146,56 +146,51 @@
 
         // 💡 智能刷新维度的核心算法
         function loadQuestion() {
-            if (currentQuestion >= questions.length) return;
-            
-            // 进度条
-            document.getElementById('progress-text').innerText = `天赋深潜进度：${currentQuestion + 1} / 80`;
-            
-            // 极其酷炫的维度提示 UI
-            let dimText = "";
-            if (currentQuestion < 20) dimText = "▶ 当前推演维度：洞察嗅觉 (Insight)";
-            else if (currentQuestion < 40) dimText = "▶ 当前推演维度：规则破坏 (Disrupt)";
-            else if (currentQuestion < 60) dimText = "▶ 当前推演维度：人心操控 (Control)";
-            else dimText = "▶ 当前推演维度：绝对理性 (Logic)";
-            
-            let dimEl = document.getElementById('dim-text');
-            dimEl.innerText = dimText;
-            // 加一点闪烁特效
-            dimEl.style.opacity = 0;
-            setTimeout(() => { dimEl.style.opacity = 1; }, 200);
-
-            // 加载题目
-            document.getElementById('question-text').innerText = questions[currentQuestion].q;
-            for(let i=1; i<=4; i++) {
-                document.getElementById('btn-'+i).innerText = questions[currentQuestion].options[i-1];
-            }
-        }
-
-        // 💡 答题按钮触发
-        function answer(choice) {
-            myAnswers += choice; 
-            currentQuestion++;
-            
-            if (currentQuestion < questions.length) { 
-                loadQuestion(); 
-            } else {
-                // 答完隐藏区域
-                document.getElementById('quiz-area').style.display = 'none';
-                document.getElementById('dim-text').style.display = 'none';
-                document.getElementById('progress-text').innerText = '正在生成深渊凝视级人格剖析...';
-                
-                // 呼叫 C++ 大脑
-                var resultText = Module.ccall('get_personality_result', 'string', ['string', 'string'], [myAnswers, authCode]);
-                
-                // 渲染长文结果
-                let resultDiv = document.getElementById('result-box');
-                resultDiv.style.display = 'block';
-                // 巧妙利用正则，让排版更高级
-                resultDiv.innerHTML = "<span class='result-title'>" + resultText.replace(/\n\n/g, "</span><span class='highlight'><br><br>").replace(/\n/g, "<br>") + "</span>";
-            }
-        }
+            // 这一段接在你截图中的 function loadQuestion() { ... } 后面
+        let dimText = "";
+        if (currentQuestion < 20) dimText = "▶ 当前维度：【洞察嗅觉】";
+        else if (currentQuestion < 40) dimText = "▶ 当前维度：【规则破坏】";
+        else if (currentQuestion < 60) dimText = "▶ 当前维度：【人心操控】";
+        else dimText = "▶ 当前维度：【绝对理性】";
         
-        Module.onRuntimeInitialized = function() { loadQuestion(); };
-    </script>
-</body>
-</html>
+        document.getElementById('dim-text').innerText = dimText;
+        document.getElementById('progress-text').innerText = `天赋深潜进度：${currentQuestion + 1} / 80`;
+        document.getElementById('question-text').innerText = questions[currentQuestion].q;
+        for(let i=1; i<=4; i++) {
+            document.getElementById('btn-'+i).innerText = questions[currentQuestion].options[i-1];
+        }
+    }
+
+    function answer(choice) {
+        myAnswers += choice; 
+        currentQuestion++;
+        if (currentQuestion < questions.length) { 
+            loadQuestion(); 
+        } else {
+            document.getElementById('quiz-area').style.display = 'none';
+            document.getElementById('dim-text').style.display = 'none';
+            document.getElementById('progress-text').innerText = '正在生成你的终极天赋判定...';
+            
+            // 核心：调用 WASM 模块
+            var resultText = Module.ccall('get_personality_result', 'string', ['string', 'string'], [myAnswers, authCode]);
+            
+            let resultDiv = document.getElementById('result-box');
+            resultDiv.style.display = 'block';
+            
+            let splitIndex = resultText.indexOf('】') + 1;
+            let titleStr = resultText.substring(0, splitIndex);
+            let contentStr = resultText.substring(splitIndex).replace(/\n/g, "<br>");
+            
+            resultDiv.innerHTML = "<span class='result-title'>" + titleStr + "</span>" +
+                                  "<span class='highlight'>" + contentStr + "</span>";
+        }
+    }
+    
+    // 初始化 Module，确保 WebAssembly 加载后才显示题目
+    var Module = {
+        onRuntimeInitialized: function() { 
+            console.log("C++ 模块载入成功");
+            loadQuestion(); 
+        }
+    };
+</script>
