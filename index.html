@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隐藏搞钱天赋测试</title>
+    <style>
+        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background-color: #121212; color: #E0E0E0; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background-color: #1E1E1E; max-width: 600px; width: 100%; border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; }
+        h1 { color: #D4AF37; font-size: 24px; text-align: center; margin-bottom: 30px; }
+        .progress { color: #888; font-size: 14px; text-align: center; margin-bottom: 20px; }
+        #question-text { font-size: 18px; line-height: 1.6; margin-bottom: 30px; font-weight: bold; min-height: 80px; }
+        .option-btn { display: block; width: 100%; background-color: #2A2A2A; color: #ccc; border: 1px solid #444; border-radius: 8px; padding: 15px 20px; margin-bottom: 15px; font-size: 16px; text-align: left; cursor: pointer; transition: all 0.3s ease; }
+        .option-btn:hover { background-color: #D4AF37; color: #000; border-color: #D4AF37; transform: translateX(5px); }
+        #result-box { display: none; margin-top: 20px; padding: 25px; border-radius: 12px; font-size: 18px; line-height: 1.8; color: #fff; background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%); border: 2px solid #D4AF37; white-space: pre-line; }
+        .highlight { color: #D4AF37; font-weight: bold; font-size: 22px;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 隐藏搞钱天赋深度测评</h1>
+        <div id="quiz-area">
+            <div class="progress" id="progress-text">题目加载中...</div>
+            <div id="question-text"></div>
+            <button class="option-btn" onclick="answer('1')" id="btn-1"></button>
+            <button class="option-btn" onclick="answer('2')" id="btn-2"></button>
+            <button class="option-btn" onclick="answer('3')" id="btn-3"></button>
+            <button class="option-btn" onclick="answer('4')" id="btn-4"></button>
+        </div>
+        <div id="result-box"></div>
+    </div>
+    <script src="game.js"></script>
+    <script>
+        const questions = [
+            { q: "公司传出风声要开拓极具争议的海外市场。领导询问谁牵头，你？", options: ["风险太高，绝不出头", "暗中收集资料，等大佬带头", "只要权限够大，值得赌一把", "第一时间拿下！荒地才是天堂"] },
+            { q: "突然有一笔 20 万的意外奖金入账，你会怎么分配？", options: ["全部买稳健理财保本", "留 15 万保底，5 万买基金", "留够生活费，全投看好的股票", "直接砸进高杠杆副业"] },
+            { q: "朋友拉你合伙创业，赛道很新九死一生，承诺给股份。你的反应？", options: ["婉拒。放弃安稳太不理智", "精神支持，绝不辞职", "要求保底薪资然后加入", "立刻辞职，All in 拿大头"] },
+            { q: "负责的重点项目即将烂尾。此时你会？", options: ["写好免责报告，防止背锅", "找领导坦白，提供止损方案", "动用非常规手段强行做平数据", "兵行险招搞个大动作搏翻盘"] },
+            { q: "玩带有博弈性质的游戏时，你的常用策略是？", options: ["拿到绝对好牌才下注", "稳扎稳打，偶尔偷鸡", "喜欢用心理战压迫对手", "极其享受 All-in 的刺激感"] },
+            { q: "参加大佬云集的闭门酒会，大部分人不认识，你会？", options: ["觉得不自在，找借口溜走", "只和邻座深度交流", "主动递名片，加有用人脉", "满场飞奔，摸清资源抛诱饵"] },
+            { q: "你发现了一个效率极高的新型 AI 工具。你会？", options: ["自己用，闷声发大财", "只分享给核心同事", "在会议上展示作为业绩", "包装成课程卖给同行"] },
+            { q: "两个平级主管在会议上为抢你的资源互相发难。你的对策是？", options: ["极度厌倦，不碰底线随他们去", "冷静收集漏洞，用数据反击", "组局私下找两人稳住局势", "顺水推舟，趁乱接管盘子"] },
+            { q: "如果要组建一个 3 人的核心搞钱团队，你最希望扮演？", options: ["掌握核心技术的极客", "制定标准把控质量的审核者", "拉投资搞定客户的交际花", "把人捏合在一起画大饼的领袖"] },
+            { q: "遇到极其难缠、无理取闹的大客户，你的第一反应？", options: ["拿合同和法务条款硬刚", "扔给团队处理，眼不见心不烦", "约出来喝酒，用私人感情化解", "投其所好送情绪价值拿订单"] },
+            { q: "决定是否投资或加入一家新公司，你最看重？", options: ["财报上严谨的利润率", "内部管理和市场占有率", "创始人描绘的宏大愿景", "赛道大趋势及我的第六感"] },
+            { q: "策划新项目时，你通常的起点是？", options: ["做详尽的数据分析", "先做小范围问卷调查", "冒出绝妙点子写核心文案", "闭眼想象用户的惊艳画面"] },
+            { q: "招募核心副手时，两份简历你会选？", options: ["履历完美技能高，像个机器", "经验对口，能解答逻辑模型", "在细分领域有独特见解", "没什么惊艳技能，聊天特别同频"] },
+            { q: "面对海量行业资讯，你的处理方式是？", options: ["建立数据库，精准检索", "只看有详实图表逻辑的研报", "凭直觉捕捉跨界信息", "喜欢听八卦提炼未来方向"] },
+            { q: "当你的判断被“数据证明不可行”而遭全员反对时？", options: ["立刻反思停止，相信数据", "重新核算模型找逻辑漏洞", "表面妥协暗地继续小成本测试", "坚持己见，创新无法用旧数据衡量"] },
+            { q: "发现一个小红书刚兴起的搞钱风口，你的反应是？", options: ["花半个月买设备力求完美", "观察同行，摸透路径再动手", "晚上写个粗糙文案先发", "连夜狂发，边挨骂边调整"] },
+            { q: "推进极其复杂的跨部门项目，你最擅长？", options: ["前期的架构设计和风险预案", "中期的资源协调和进度监督", "打破规则强行推进", "最后关头爆肝解决BUG"] },
+            { q: "组装复杂的家具时，你会？", options: ["看说明书，零件排好再动手", "看着说明书一步步对照拼", "直接上手，拼不下去再看图", "说明书扔掉，靠直觉硬怼"] },
+            { q: "下周做重要演讲但还没建 PPT，你的状态？", options: ["极度焦虑，立刻列大纲彩排", "每天推进一点稳步完成", "脑子里构思，前一晚通宵写", "毫无压力，现场脱稿吹水"] },
+            { q: "回顾错失的赚钱机会，最大的原因通常是？", options: ["想得太多，计划太完美错过时机", "考察太久，觉得这也不行那也不行", "脑热冲进去，遇到困难没坚持", "虽然行动快，但方向全错"] }
+        ];
+        let currentQuestion = 0; let myAnswers = ""; 
+        function loadQuestion() {
+            if (currentQuestion >= questions.length) return;
+            document.getElementById('progress-text').innerText = `测评进度：${currentQuestion + 1} / 20`;
+            document.getElementById('question-text').innerText = questions[currentQuestion].q;
+            for(let i=1; i<=4; i++) document.getElementById('btn-'+i).innerText = questions[currentQuestion].options[i-1];
+        }
+        function answer(choice) {
+            myAnswers += choice; currentQuestion++;
+            if (currentQuestion < questions.length) { loadQuestion(); } 
+            else {
+                document.getElementById('quiz-area').style.display = 'none';
+                var resultText = Module.ccall('get_personality_result', 'string', ['string'], [myAnswers]);
+                let resultDiv = document.getElementById('result-box');
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = "<span class='highlight'>" + resultText.replace('\n', "</span><br><br>");
+            }
+        }
+        Module.onRuntimeInitialized = function() { loadQuestion(); };
+    </script>
+</body>
+</html>
